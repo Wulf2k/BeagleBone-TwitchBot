@@ -1,2 +1,2 @@
 # BeagleBone-TwitchBot
- IRC bot to interface with Twitch and drive gaming console controller inputs via GPIO
+ An IRC bot intended to parse TwitchChat for input, then translate it to conroller output to gaming consoles via GPIO.
