@@ -13,37 +13,28 @@
 #include <thread>
 #include <unistd.h>
 
+#include "irc.h"
+
 using namespace std;
 
-class IrcCon {
-    public:
-	string nick = "Wulf2kbot";
-	string user = "Wulf2kbot";
-	string channel = "#wulf2k";
-	const char* serverAddr = "irc.chat.twitch.tv";
-	unsigned short serverPort = 6667;
-	
-	vector<string> cmds;
-
-	int sockfd = -1;
-
-	void disconn()
+namespace irc {
+ 
+	void IrcCon::disconn()
 	{
 		printf("Closing socket.\n");
 		close(sockfd);
 	}
 
-	vector<string> splitter(string in_pattern, string& content)
+	vector<string> IrcCon::splitter(string in_pattern, string& content)
 	{
 		vector<string> split_content;
-
 		regex pattern(in_pattern);
 		copy( sregex_token_iterator(content.begin(), content.end(), pattern, -1),
 			sregex_token_iterator(),back_inserter(split_content));  
 		return split_content;
 	}
 
-	void conn()
+	void IrcCon::conn()
 	{
 		int portno, n;
 		struct sockaddr_in serv_addr;
@@ -100,7 +91,7 @@ class IrcCon {
 	};
 
 
-	void get()
+	void IrcCon::get()
 	{
 		int n;
 		char buffer[1024];
@@ -121,11 +112,11 @@ class IrcCon {
 					printf("<< %s\n", line.c_str());
 					send("PONG");
 				} else {
-					cmds.insert(cmds.end(), line);
+					msgs.insert(msgs.end(), line);
 				}
 		}	
 	};
-	void send(string str)
+	void IrcCon::send(string str)
 	{
 		if (!str.find("PASS") == 0)
 		{
@@ -140,30 +131,8 @@ class IrcCon {
 			printf("Error writing to socket.\n");
 		};
 	};
-	void join(string chan)
+	void IrcCon::join(string chan)
 	{
 		send("JOIN " + chan);
 	}
 };
-
-int main()
-{
-	IrcCon irc;
-	irc.conn();
-
-	irc.join(irc.channel);
-	irc.send("PRIVMSG " + irc.channel + " :" + irc.nick + " initializing.");
-	
-	while (irc.sockfd > -1)
-	{
-		irc.get();
-		while (irc.cmds.size() > 0)
-		{
-			printf("<< %s\n", irc.cmds[0].c_str());
-			irc.cmds.erase(irc.cmds.begin());
-		}
-		usleep(200000);
-	}
-
-	irc.disconn();
-}
